@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ADX Memory Aid Drill</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Oswald:wght@500;600;700&display=swap');
+
+  :root{
+    --bg: #10151a;
+    --panel: #171f26;
+    --line: #2a3541;
+    --amber: #ffb000;
+    --amber-dim: #7a5a00;
+    --green: #35d07f;
+    --red: #ff5a52;
+    --text: #e8ecef;
+    --text-dim: #7d8a94;
+  }
+
+  *{ box-sizing: border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 50% -10%, #1b242c 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family:'Share Tech Mono', monospace;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 24px;
+  }
+
+  .console{
+    width:100%;
+    max-width:560px;
+  }
+
+  .eyebrow{
+    text-align:center;
+    letter-spacing:.35em;
+    font-size:11px;
+    color: var(--amber-dim);
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+
+  h1{
+    font-family:'Oswald', sans-serif;
+    font-weight:700;
+    text-align:center;
+    font-size:28px;
+    letter-spacing:.04em;
+    margin:0 0 4px;
+    color: var(--text);
+  }
+
+  .subhead{
+    text-align:center;
+    font-size:12px;
+    color: var(--text-dim);
+    margin-bottom:26px;
+  }
+
+  .stat-bar{
+    display:flex;
+    justify-content:space-between;
+    font-size:12px;
+    color: var(--text-dim);
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    margin-bottom:10px;
+    padding:0 4px;
+  }
+
+  .stat-bar span b{ color: var(--amber); font-weight:normal; }
+
+  .progress-track{
+    height:3px;
+    background: var(--line);
+    border-radius:2px;
+    margin-bottom:22px;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    background: var(--amber);
+    width:0%;
+    transition: width .35s ease;
+  }
+
+  .card{
+    background: var(--panel);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:34px 28px 28px;
+    position:relative;
+    box-shadow: 0 20px 50px -25px rgba(0,0,0,.7);
+    transition: border-color .25s ease, box-shadow .25s ease;
+  }
+
+  .card::before{
+    content:"";
+    position:absolute;
+    top:0; left:24px; right:24px;
+    height:1px;
+    background: repeating-linear-gradient(90deg, var(--line) 0 6px, transparent 6px 12px);
+  }
+
+  .category{
+    text-align:center;
+    font-size:11px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color: var(--amber);
+    margin-bottom:16px;
+  }
+
+  .code{
+    text-align:center;
+    font-family:'Oswald', sans-serif;
+    font-weight:600;
+    font-size:44px;
+    letter-spacing:.03em;
+    color: var(--text);
+    margin-bottom:30px;
+    min-height:54px;
+  }
+
+  .choices{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap:10px;
+  }
+
+  .choice-btn{
+    font-family:'Oswald', sans-serif;
+    font-weight:600;
+    letter-spacing:.08em;
+    font-size:15px;
+    padding:16px 8px;
+    background: #1c2530;
+    border:1px solid var(--line);
+    color: var(--text);
+    border-radius:4px;
+    cursor:pointer;
+    transition: transform .12s ease, background .15s ease, border-color .15s ease;
+  }
+  .choice-btn:hover:not(:disabled){
+    border-color: var(--amber-dim);
+    transform: translateY(-1px);
+  }
+  .choice-btn:disabled{ cursor:default; }
+
+  .choice-btn.correct{
+    background: rgba(53,208,127,.16);
+    border-color: var(--green);
+    color: var(--green);
+  }
+  .choice-btn.wrong{
+    background: rgba(255,90,82,.14);
+    border-color: var(--red);
+    color: var(--red);
+  }
+  .choice-btn.reveal{
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  .feedback{
+    text-align:center;
+    font-size:12px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    height:16px;
+    margin-top:18px;
+    color: var(--text-dim);
+  }
+  .feedback.correct{ color: var(--green); }
+  .feedback.wrong{ color: var(--red); }
+
+  .controls{
+    display:flex;
+    justify-content:center;
+    margin-top:18px;
+  }
+
+  .next-btn, .restart-btn{
+    font-family:'Oswald', sans-serif;
+    font-weight:600;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    font-size:13px;
+    background: transparent;
+    border:1px solid var(--amber-dim);
+    color: var(--amber);
+    padding:10px 22px;
+    border-radius:4px;
+    cursor:pointer;
+    visibility:hidden;
+  }
+  .next-btn.show, .restart-btn{ visibility:visible; }
+  .next-btn:hover, .restart-btn:hover{ background: rgba(255,176,0,.08); }
+
+  .summary{
+    text-align:center;
+  }
+  .summary .big{
+    font-family:'Oswald', sans-serif;
+    font-size:48px;
+    font-weight:700;
+    color: var(--amber);
+    margin: 10px 0 4px;
+  }
+  .summary .label{
+    font-size:12px;
+    color: var(--text-dim);
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    margin-bottom:24px;
+  }
+
+  .hidden{ display:none; }
+
+  @media (max-width:420px){
+    .code{ font-size:34px; }
+    .choice-btn{ font-size:13px; padding:14px 4px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="console">
+  <div class="eyebrow">Flight Ops Trainer</div>
+  <h1>ADX Memory Aid Drill</h1>
+  <div class="subhead">Guess LOW, MID, or HIGH for each item</div>
+
+  <div class="stat-bar">
+    <span>Item <b id="qnum">1</b>/<b id="qtotal">--</b></span>
+    <span>Score <b id="score">0</b></span>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="card" id="quizCard">
+    <div class="category" id="category">—</div>
+    <div class="code" id="code">—</div>
+    <div class="choices" id="choices">
+      <button class="choice-btn" data-choice="LOW">LOW</button>
+      <button class="choice-btn" data-choice="MID">MID</button>
+      <button class="choice-btn" data-choice="HIGH">HIGH</button>
+    </div>
+    <div class="feedback" id="feedback"></div>
+    <div class="controls"><button class="next-btn" id="nextBtn">Next →</button></div>
+  </div>
+
+  <div class="card summary hidden" id="summaryCard">
+    <div class="category">Drill Complete</div>
+    <div class="big" id="finalScore">0/0</div>
+    <div class="label">correct</div>
+    <button class="restart-btn" id="restartBtn">Run Again (Reshuffled)</button>
+  </div>
+</div>
+
+<script>
+  // ---- Data set, built from the uploaded memory-aid tables ----
+  // Note: a few unclear/cut-off entries from the source images were left out
+  // (a partial FISDL line, and two unlabeled "ditto" rows in the reference
+  // table) — easy to add below once you confirm the exact text.
+  const DATA = [
+    // Ground Distance Covered During Climb
+    { category: "Ground Distance Covered During Climb — W-1", answer: "MID" },
+    { category: "Ground Distance Covered During Climb — W-2", answer: "LOW" },
+    { category: "Ground Distance Covered During Climb — W-3", answer: "HIGH" },
+    { category: "Ground Distance Covered During Climb — W-4", answer: "HIGH" },
+    { category: "Ground Distance Covered During Climb — V-2", answer: "MID" },
+    { category: "Ground Distance Covered During Climb — V-5", answer: "MID" },
+
+    // Weight at Top of Climb
+    { category: "Weight at Top of Climb — W-1", answer: "LOW" },
+    { category: "Weight at Top of Climb — W-2", answer: "MID" },
+    { category: "Weight at Top of Climb — W-4", answer: "MID" },
+    { category: "Weight at Top of Climb — W-5", answer: "LOW" },
+    { category: "Weight at Top of Climb — V-3", answer: "HIGH" },
+    { category: "Weight at Top of Climb — V-4", answer: "MID" },
+    { category: "Weight at Top of Climb — V-5", answer: "HIGH" },
+
+    // Fuel Burned During Climb
+    { category: "Fuel Burned During Climb — V-1", answer: "MID" },
+    { category: "Fuel Burned During Climb — V-2", answer: "LOW" },
+
+    // Trip Time
+    { category: "Trip Time — X-1", answer: "MID" },
+    { category: "Trip Time — X-2", answer: "HIGH" },
+    { category: "Trip Time — X-3", answer: "LOW" },
+    { category: "Trip Time — X-4", answer: "LOW" },
+    { category: "Trip Time — X-5", answer: "MID" },
+    { category: "Trip Time — Z-1", answer: "LOW" },
+    { category: "Trip Time — Z-2", answer: "MID" },
+    { category: "Trip Time — Z-4", answer: "MID" },
+
+    // Trip Fuel
+    { category: "Trip Fuel — X-3", answer: "MID" },
+    { category: "Trip Fuel — Z-2", answer: "HIGH" },
+
+    // Figures
+    { category: "Figure 230", answer: "MID" },
+    { category: "Figure 231", answer: "LOW" },
+    { category: "Figure 232", answer: "LOW" },
+
+    // Wx system
+    { category: "Wx System Approaching WA and OR", answer: "LOW" },
+
+    // Answers
+    { category: "Reference Table — WS-2", answer: "LOW" },
+    { category: "Reference Table — WS-4", answer: "LOW" },
+    { category: "Reference Table — AC-6", answer: "MID" },
+    { category: "Reference Table — WS-1", answer: "MID" },
+    { category: "Reference Table — WS-3", answer: "MID" },
+    { category: "Reference Table — WS-5", answer: "MID" },
+  ];
+
+  let order = [];
+  let idx = 0;
+  let score = 0;
+  let answered = false;
+
+  const categoryEl = document.getElementById('category');
+  const codeEl = document.getElementById('code');
+  const choicesEl = document.getElementById('choices');
+  const feedbackEl = document.getElementById('feedback');
+  const nextBtn = document.getElementById('nextBtn');
+  const qnumEl = document.getElementById('qnum');
+  const qtotalEl = document.getElementById('qtotal');
+  const scoreEl = document.getElementById('score');
+  const progressFill = document.getElementById('progressFill');
+  const quizCard = document.getElementById('quizCard');
+  const summaryCard = document.getElementById('summaryCard');
+  const finalScoreEl = document.getElementById('finalScore');
+  const restartBtn = document.getElementById('restartBtn');
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i = a.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function start(){
+    order = shuffle(DATA.map((_, i) => i));
+    idx = 0;
+    score = 0;
+    answered = false;
+    qtotalEl.textContent = order.length;
+    scoreEl.textContent = "0";
+    summaryCard.classList.add('hidden');
+    quizCard.classList.remove('hidden');
+    renderQuestion();
+  }
+
+  function renderQuestion(){
+    answered = false;
+    const item = DATA[order[idx]];
+    // Split category into label + trailing code for the two-line display
+    categoryEl.textContent = item.category.includes('—')
+      ? item.category.split('—')[0].trim()
+      : item.category;
+    codeEl.textContent = item.category.includes('—')
+      ? item.category.split('—')[1].trim()
+      : '';
+
+    qnumEl.textContent = idx + 1;
+    progressFill.style.width = (idx / order.length * 100) + "%";
+    feedbackEl.textContent = "";
+    feedbackEl.className = "feedback";
+    nextBtn.classList.remove('show');
+
+    document.querySelectorAll('.choice-btn').forEach(btn => {
+      btn.disabled = false;
+      btn.classList.remove('correct', 'wrong', 'reveal');
+    });
+  }
+
+  choicesEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('.choice-btn');
+    if (!btn || answered) return;
+    answered = true;
+
+    const item = DATA[order[idx]];
+    const guess = btn.dataset.choice;
+    const allBtns = document.querySelectorAll('.choice-btn');
+    allBtns.forEach(b => b.disabled = true);
+
+    if (guess === item.answer){
+      btn.classList.add('correct');
+      feedbackEl.textContent = "Correct";
+      feedbackEl.className = "feedback correct";
+      score++;
+      scoreEl.textContent = score;
+    } else {
+      btn.classList.add('wrong');
+      feedbackEl.textContent = "Incorrect — answer: " + item.answer;
+      feedbackEl.className = "feedback wrong";
+      allBtns.forEach(b => {
+        if (b.dataset.choice === item.answer) b.classList.add('reveal');
+      });
+    }
+    nextBtn.classList.add('show');
+  });
+
+  nextBtn.addEventListener('click', () => {
+    if (!answered) return;
+    idx++;
+    if (idx >= order.length){
+      progressFill.style.width = "100%";
+      quizCard.classList.add('hidden');
+      summaryCard.classList.remove('hidden');
+      finalScoreEl.textContent = score + "/" + order.length;
+    } else {
+      renderQuestion();
+    }
+  });
+
+  restartBtn.addEventListener('click', start);
+
+  start();
+</script>
+
+</body>
+</html>
